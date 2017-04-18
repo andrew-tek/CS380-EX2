@@ -1,5 +1,5 @@
 //Andrew Tek
-//CS 380
+//CS380 Excercise 2
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -18,54 +18,48 @@ public class Ex2Client {
 
 	public static void main(String[] args) throws UnknownHostException, IOException {
 		 try (Socket socket = new Socket("codebank.xyz", 38102)) {
+			 	System.out.println("Connecting to server...");
 			 	int value1, value2;
 			 	InputStream is = socket.getInputStream();
 			 	String message = "";
 			 	 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-			 	
 	            InputStreamReader isr = new InputStreamReader(is, "UTF-8");
+	        	BufferedReader br = new BufferedReader(isr);
+			 	System.out.println("Bytes Received:");
 	            for (int i = 0; i < 50; i++) {
 		            value1 = isr.read();
 		            value2 = isr.read();
 		            String hex1 = Integer.toHexString(value1);
 		            String hex2 = Integer.toHexString(value2);
-		            System.out.println(hex1);
-		            System.out.println(hex2);
-		            message = message.concat(hex1.concat(hex2));
+		            message = hex1.concat(hex2.concat(message));
+		            System.out.print(hex1 + hex2);
+		            if (i % 10 == 0 & i != 0)
+		            	System.out.println();
+		          
 	            }
-	            System.out.println(message);
+	            System.out.println();
 	            byte messageBytes[] = hexStringToByteArray (message);
-	            for (int i = 0; i < messageBytes.length; i++) {
-	            	System.out.print(messageBytes[i]);
-	            }
 	            CRC32 crcTest = new CRC32();
 	            crcTest.update(messageBytes);
-	            System.out.println("\n" + crcTest.getValue());
 	            int data = (int) crcTest.getValue();
 	            message = Long.toHexString(crcTest.getValue());
-	            System.out.println("MESSAGE:" + message);
-	            String tmp;
+	            message = message.toUpperCase();
+	            System.out.println("CRC Code:" + message);
+	            byte test [] = hexStringToByteArray(message);
+	            int value = Integer.parseInt(message.substring(0, 1), 16); 
+	            for (int i = 0; i < 8; i+=2) {
+	            	value = Integer.parseInt(message.substring(i, i + 1), 16); 
+	            	value2 = Integer.parseInt(message.substring(i+1, i + 2), 16);
+	            	out.print(value);
+	            	out.println(value2);
+	            }
+	            String messages = br.readLine();
+	            value1 = socket.getInputStream().read();
+	            if (value1 == 1) 
+	            	System.out.println("Correct CRC Value. Disconnecting.");
 	            
-	      
-	            
-	            for (int i = 0; i < message.length(); i +=2) {
-	            	tmp = message.substring(i, i + 2);
-	            	out.print(tmp);
-	            	System.out.println(tmp);
-	            }
-	           
-	            value1 = isr.read();
-	            System.out.println(value1 + "HERE");
-	            if (value1 == 1) {
-	            	System.out.println("You did it");
-	            }
-	            else if (value1 == 0) {
-	            	System.out.println("You kind of failed this city");
-	            }
 	            else
-	            	System.out.println("You failed this city...");
-	            
-	            
+	            	System.out.println("Incorrect CRC Value. Disconnecting.");
         	}
 		 }
 	public static byte[] hexStringToByteArray(String s) {
@@ -77,14 +71,7 @@ public class Ex2Client {
 	    }
 	    return data;
 	}
-	static List<Integer> digits(int i) {
-	    List<Integer> digits = new ArrayList<Integer>();
-	    while(i > 0) {
-	        digits.add(i % 10);
-	        i /= 10;
-	    }
-	    return digits;
-	}
+
 
 	}
 
